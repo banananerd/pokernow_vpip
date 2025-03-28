@@ -42,6 +42,8 @@ for hand in grouped_df:
         if "Player stacks:" in entry:
             playerNameMatch = re.findall(playerNameUsingStacksPattern, entry)
             currentPlayersTuple = tuple(sorted([match.split(" @ ")[0] for match in playerNameMatch]))
+            groupMap[currentPlayersTuple] = groupMap.get(currentPlayersTuple, {})
+            groupMap[currentPlayersTuple]['totalHandsPlayedByGroup'] = groupMap[currentPlayersTuple].get('totalHandsPlayedByGroup', 0) + 1
         if "raises to" in entry or "calls" in entry:
             player_name = entry.split(' @ ')[0].replace('"', '')
             currentGroupMap = groupMap.get(currentPlayersTuple, {})
@@ -54,6 +56,7 @@ for hand in grouped_df:
 #vpip 
 
 handsPlayedMap = {}
+
 for group, groupParticipation in groupMap.items():
     handsPlayedByAll = 0
     for player, playedHandsCount in groupParticipation.items():
@@ -61,7 +64,15 @@ for group, groupParticipation in groupMap.items():
         handsPlayedMap[player]['handsPlayedByPlayer'] = handsPlayedMap[player].get('handsPlayedByPlayer', 0) + playedHandsCount
         handsPlayedByAll += playedHandsCount 
     for player, playedHandsCount in groupParticipation.items():
-        handsPlayedMap[player]['handsPlayedByAll'] = handsPlayedMap[player].get('handsPlayedByAll', 0) + handsPlayedByAll
-print(handsPlayedMap)
+        handsPlayedMap[player]['handsPlayedByAll'] = handsPlayedMap[player].get('handsPlayedByAll', 0) + groupParticipation['totalHandsPlayedByGroup']
+for player, stats in handsPlayedMap.items():
+  # Skip total group data
+    hands_played_by_player = stats['handsPlayedByPlayer']
+    hands_played_by_all = stats['handsPlayedByAll']
+    percentage = (hands_played_by_player / hands_played_by_all) * 100
+    print(f"{player}:")
+    print(f"  Hands Played by Player: {hands_played_by_player}")
+    print(f"  Hands Played by People They Played With: {hands_played_by_all}")
+    print(f"  Percentage: {percentage:.2f}%\n")
     
         
